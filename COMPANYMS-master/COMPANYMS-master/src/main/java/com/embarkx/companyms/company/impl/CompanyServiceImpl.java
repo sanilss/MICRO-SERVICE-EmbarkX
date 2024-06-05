@@ -1,21 +1,28 @@
 package com.embarkx.companyms.company.impl;
 
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
 import com.embarkx.companyms.company.Company;
 import com.embarkx.companyms.company.CompanyRepository;
 import com.embarkx.companyms.company.CompanyService;
-import org.springframework.stereotype.Service;
+import com.embarkx.companyms.company.clients.ReviewClient;
+import com.embarkx.companyms.company.dto.ReviewMessage;
 
-import java.util.List;
-import java.util.Optional;
+import jakarta.ws.rs.NotFoundException;
 
 @Service
 public class CompanyServiceImpl implements CompanyService {
 
 public CompanyRepository companyRepository;
+private ReviewClient reviewClient;
 
-public CompanyServiceImpl(CompanyRepository companyRepository){
+public CompanyServiceImpl(CompanyRepository companyRepository,ReviewClient reviewClient){
     this.companyRepository=companyRepository;
+    this.reviewClient=reviewClient;
 }
 
     @Override
@@ -54,6 +61,17 @@ public CompanyServiceImpl(CompanyRepository companyRepository){
     }
         return false;
     }
+
+	@Override
+	public void updateCompanyRating(ReviewMessage reviewMessage) {
+System.out.println(reviewMessage.getDescription());	
+//get the company from the database also we need to get the average rating 
+//against that Company from the review Service and then we need to update the Company Review and then save it.
+Company company=companyRepository.findById(reviewMessage.getCompanyId()).orElseThrow(() -> new NotFoundException("Company not Found"+ reviewMessage.getCompanyId()));
+	Double avgRating=reviewClient.getAverageRatingForCompany(company.getId());
+   company.setRating(avgRating);
+	companyRepository.save(company);
+	}
 
 
 
